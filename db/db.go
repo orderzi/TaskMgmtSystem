@@ -45,15 +45,28 @@ func (c *DatabaseConnection) OpenDBSession() (*sql.DB, error) {
 // Writing user to DB; gets DB object and Struct User; returns string and error/nil
 
 func WriteUser(db *sql.DB, user types.User) (sql.Result, error) {
-	prep, err := db.Prepare("INSERT INTO Users(FirstName, LastName, BirthDate, Age) VALUES (?, ? , ?, ?) ON DUPLICATE KEY UPDATE FirstName=?, LastName=?, BirthDate=?, Age=?")
+	prep, err := db.Prepare("INSERT INTO Users(FirstName, LastName, BirthDate, Age, Email) VALUES (?, ? , ?, ?, ?)")
 	if err != nil {
 		return nil, err
 	}
-	writer, err := prep.Exec(user.FirstName, user.LastName, user.Birthdate, user.Age, user.FirstName, user.LastName, user.Birthdate, user.Age)
+	writer, err := prep.Exec(user.FirstName, user.LastName, user.Birthdate, user.Age, user.Email)
 	if err != nil {
 		return nil, err
 	}
 	defer prep.Close()
 	return writer, nil
 
+}
+
+func IsExistUser(db *sql.DB, user types.User) error {
+	var count int
+	err := db.QueryRow("SELECT COUNT(*) FROM Users WHERE Email = ?", user.Email).Scan(&count)
+	if err != nil {
+		fmt.Println("Error here")
+		return err
+	}
+	if count > 0 {
+		return fmt.Errorf("user %v is already created", user.Email)
+	}
+	return nil
 }

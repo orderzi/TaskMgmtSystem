@@ -45,13 +45,20 @@ func createUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	email, err := utils.ValidateEmail(r.FormValue("email"))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
 	user := &types.User{
 		FirstName: firstname,
 		LastName:  lastname,
 		Birthdate: birthdate,
+		Email:     email,
 	}
 	err = utils.SetAge(user)
-	if err != nil{
+	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -64,9 +71,16 @@ func createUser(w http.ResponseWriter, r *http.Request) {
 		Port:     db_port,
 		DBName:   db_name,
 	}
+
 	connection, err := db_params.OpenDBSession()
 	if err != nil {
-		http.Error(w, "Cannot establish DB connection", http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	is_user_exist := db.IsExistUser(connection, *user)
+	if is_user_exist != nil {
+		http.Error(w, is_user_exist.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -75,10 +89,8 @@ func createUser(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	// fmt.Println(writer)
 
 }
-
 
 func HandleRequests() {
 	myRouter := mux.NewRouter().StrictSlash(true)

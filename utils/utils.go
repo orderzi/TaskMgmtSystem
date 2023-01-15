@@ -3,6 +3,7 @@ package utils
 import (
 	// "bufio"
 	"fmt"
+	"net/mail"
 	"regexp"
 	"strings"
 	"time"
@@ -36,6 +37,11 @@ func ValidateDate(date string) (string, error) {
 		return "", err
 	}
 	return date, err
+}
+
+func ValidateEmail(email string) (string, error) {
+	_, err := mail.ParseAddress(email)
+	return email, err
 }
 
 func FormatName(name string) (string, error) {
