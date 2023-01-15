@@ -1,18 +1,15 @@
 package types
 
 type User struct {
-	Name   string `json:"name"`
-	Age    int    `json:"age"`
-	Weight int    `json:"weight"`
+	FirstName string `json:"firstname"`
+	LastName  string `json:"lastname"`
+	Birthdate string `json:"birthdate"`
+	Age       int    `json:"age"`
 }
 
-type Users []User
-
-type DatabaseConnection struct {
-	Host     string 
-	User     string 
-	Password string 
-	Port     string   
-	DBName   string 
+type Task struct {
+	Name     string `json:"name"`
+	Date     string `json:"date"`
+	Assigner string `json:"asigner"`
+	Assignee string `json:"asignee"`
 }
-

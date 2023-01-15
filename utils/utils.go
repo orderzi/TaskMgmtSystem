@@ -3,38 +3,39 @@ package utils
 import (
 	// "bufio"
 	"fmt"
-	"math"
 	"regexp"
 	"strings"
+	"time"
 
+	"github.com/orderzi/workout-service/types"
 	// "os"
 	// "regexp"
-	"strconv"
 	// "strings"
 )
 
-
-
-func ValidateAge(age string) (int, error) {
-	a, err := strconv.Atoi(age)
+func SetAge(u *types.User) error {
+	bd, err := time.Parse("2006-01-02", u.Birthdate)
 	if err != nil {
-		return 0, fmt.Errorf("field age cannot convert string '%v' to a number", age)
+		return err
 	}
-	if a < 16 {
-		return 0, fmt.Errorf("age '%d' is less than 16", a)
+	now := time.Now()
+	birthYear := bd.Year()
+	birthMonth := bd.Month()
+	birthDay := bd.Day()
+	age := now.Year() - birthYear
+	if now.Month() < birthMonth || (now.Month() == birthMonth && now.Day() < birthDay) {
+		age--
 	}
-	return a, nil
+	u.Age = age
+	return nil
 }
 
-func RoundWeight(weight string) (int, error) {
-	w, err := strconv.ParseFloat(weight, 64)
+func ValidateDate(date string) (string, error) {
+	_, err := time.Parse("2006-01-02", date)
 	if err != nil {
-		return 0, fmt.Errorf("cannot convert weight '%v' to a float", weight)
+		return "", err
 	}
-	if math.Floor(w) == w {
-		return int(w), nil
-	}
-	return int(math.Round(w)), nil
+	return date, err
 }
 
 func FormatName(name string) (string, error) {
@@ -49,6 +50,28 @@ func FormatName(name string) (string, error) {
 		return "", fmt.Errorf("name '%v' should contain only letters", name)
 	}
 }
+
+// func ValidateAge(age string) (int, error) {
+// 	a, err := strconv.Atoi(age)
+// 	if err != nil {
+// 		return 0, fmt.Errorf("field age cannot convert string '%v' to a number", age)
+// 	}
+// 	if a < 0 {
+// 		return 0, fmt.Errorf("age cannot be 0")
+// 	}
+// 	return a, nil
+// }
+
+// func RoundWeight(weight string) (int, error) {
+// 	w, err := strconv.ParseFloat(weight, 64)
+// 	if err != nil {
+// 		return 0, fmt.Errorf("cannot convert weight '%v' to a float", weight)
+// 	}
+// 	if math.Floor(w) == w {
+// 		return int(w), nil
+// 	}
+// 	return int(math.Round(w)), nil
+// }
 
 // func GetUserName() string {
 // 	var name string
