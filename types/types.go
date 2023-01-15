@@ -9,8 +9,12 @@ type User struct {
 }
 
 type Task struct {
-	Name     string `json:"name"`
-	Date     string `json:"date"`
-	Assigner string `json:"assigner"`
-	Assignee string `json:"assignee"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Date        string `json:"date"`
+	Assigner    User   //string `json:"assigner"`
+	Assignee    User   //string `json:"assignee"`
+	Duration    string `json:"duration"`
+	Priority    string `json:"priority"`
+	UserID      int    `json:"userid"`
 }

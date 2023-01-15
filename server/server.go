@@ -1,6 +1,7 @@
 package server
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -92,10 +93,31 @@ func createUser(w http.ResponseWriter, r *http.Request) {
 
 }
 
+func createTask(w http.ResponseWriter, r *http.Request) {
+	var task types.Task
+	if r.Method != http.MethodPost {
+		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+		return
+	}
+	task.Name = r.FormValue("name")
+	if r.FormValue("name") == "" {
+		http.Error(w, "Task name should not be blank", http.StatusBadRequest)
+	}
+	if err := json.NewDecoder(r.Body).Decode(&task); err != nil{
+		http.Error(w, "Error decoding request body"+err.Error(), http.StatusBadRequest)
+		return
+		}
+	fmt.Printf("%+v\n", task)
+	
+
+}
+
 func HandleRequests() {
 	myRouter := mux.NewRouter().StrictSlash(true)
 	myRouter.HandleFunc("/", homePage)
 	myRouter.HandleFunc("/createuser", createUser)
+	myRouter.HandleFunc("/createtask", createTask)
+
 	fmt.Println("Starting server on port 8081")
 	log.Fatal(http.ListenAndServe(":8081", myRouter))
 
