@@ -75,7 +75,7 @@ func createUser(w http.ResponseWriter, r *http.Request) {
 
 	connection, err := db_params.OpenDBSession()
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -103,12 +103,34 @@ func createTask(w http.ResponseWriter, r *http.Request) {
 	if r.FormValue("name") == "" {
 		http.Error(w, "Task name should not be blank", http.StatusBadRequest)
 	}
-	if err := json.NewDecoder(r.Body).Decode(&task); err != nil{
+	if err := json.NewDecoder(r.Body).Decode(&task); err != nil {
 		http.Error(w, "Error decoding request body"+err.Error(), http.StatusBadRequest)
 		return
-		}
-	fmt.Printf("%+v\n", task)
-	
+	}
+	db_params := db.DatabaseConnection{
+		Host:     db_host,
+		User:     db_user,
+		Password: db_password,
+		Port:     db_port,
+		DBName:   db_name,
+	}
+	connection, err := db_params.OpenDBSession()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	fmt.Println(task)
+	is_task_exist := db.IsExistTask(connection, task)
+	if is_task_exist != nil {
+		http.Error(w, "task is already created", http.StatusBadRequest)
+		return
+	}
+
+	_, err = db.WriteTask(connection, task)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
 }
 
