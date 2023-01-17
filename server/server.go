@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/gorilla/mux"
 	"github.com/orderzi/workout-service/db"
@@ -46,7 +47,7 @@ func createUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	email, err := utils.ValidateEmail(r.FormValue("email"))
+	err = utils.ValidateEmail(r.FormValue("email"))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -56,14 +57,13 @@ func createUser(w http.ResponseWriter, r *http.Request) {
 		FirstName: firstname,
 		LastName:  lastname,
 		Birthdate: birthdate,
-		Email:     email,
+		Email:     r.FormValue("email"),
 	}
-	err = utils.SetAge(user)
+	err = types.SetAge(user)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	fmt.Println(user)
 
 	db_params := db.DatabaseConnection{
 		Host:     db_host,
@@ -94,19 +94,26 @@ func createUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func createTask(w http.ResponseWriter, r *http.Request) {
+	
 	var task types.Task
 	if r.Method != http.MethodPost {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 		return
 	}
-	task.Name = r.FormValue("name")
-	if r.FormValue("name") == "" {
-		http.Error(w, "Task name should not be blank", http.StatusBadRequest)
-	}
+	task.Name = strings.Title(r.FormValue("name"))
+
 	if err := json.NewDecoder(r.Body).Decode(&task); err != nil {
 		http.Error(w, "Error decoding request body"+err.Error(), http.StatusBadRequest)
 		return
 	}
+	defer r.Body.Close()
+
+	validate := task.Validate()
+	if validate != nil {
+		http.Error(w, validate.Error(), http.StatusBadRequest)
+		return
+	}
+
 	db_params := db.DatabaseConnection{
 		Host:     db_host,
 		User:     db_user,
@@ -119,7 +126,7 @@ func createTask(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	fmt.Println(task)
+
 	is_task_exist := db.IsExistTask(connection, task)
 	if is_task_exist != nil {
 		http.Error(w, "task is already created", http.StatusBadRequest)
@@ -131,6 +138,10 @@ func createTask(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+}
+
+func getUserTasks(w http.ResponseWriter, r *http.Request){
 
 }
 

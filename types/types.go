@@ -3,6 +3,8 @@ package types
 import (
 	"strings"
 	"time"
+
+	"github.com/orderzi/workout-service/utils"
 )
 
 type User struct {
@@ -11,6 +13,23 @@ type User struct {
 	Birthdate string `json:"birthdate"`
 	Age       int    `json:"age"`
 	Email     string `json:"email"`
+}
+
+func SetAge(u *User) error {
+	bd, err := time.Parse("2006-01-02", u.Birthdate)
+	if err != nil {
+		return err
+	}
+	now := time.Now()
+	birthYear := bd.Year()
+	birthMonth := bd.Month()
+	birthDay := bd.Day()
+	age := now.Year() - birthYear
+	if now.Month() < birthMonth || (now.Month() == birthMonth && now.Day() < birthDay) {
+		age--
+	}
+	u.Age = age
+	return nil
 }
 
 type Task struct {
@@ -40,7 +59,19 @@ func (t *Datetime) UnmarshalJSON(input []byte) error {
 	if err != nil {
 		return err
 	}
-	
+
 	t.Time = newTime
+	return nil
+}
+
+func (t *Task) Validate() error {
+	err := utils.ValidateEmail(t.Assignee.Email)
+	if err != nil {
+		return err
+	}
+	priority := utils.ValidatePriority(t.Priority)
+	if priority != nil {
+		return priority
+	}
 	return nil
 }
